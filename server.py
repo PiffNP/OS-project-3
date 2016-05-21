@@ -1,6 +1,7 @@
 #!usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from IPython import embed
+import urllib
 import io, shutil
 import json
 
@@ -15,6 +16,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         inputs = input_str.split('&')
         for input in inputs:
             key, value = input.split('=')
+            value = urllib.parse.unquote(value, encoding='utf-8', errors='replace')
             ret[key] = value
         return ret
 
