@@ -17,8 +17,11 @@ def request(request_str):
         res = conn.getresponse()
         print(res.read())
     t = threading.Thread(target=func, args=(request_str,))
-    print("new thread runs")
     t.start()
-for i in range(10):
+def main():
     request(insert_url)
-    request(delete_url)
+    request(insert_url)
+    #request(delete_url)
+
+if __name__=='__main__':
+    main()

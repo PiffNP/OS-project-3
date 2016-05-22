@@ -78,8 +78,6 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.handle_request()
 
     def handle_request(self):
-        print("receive request")
-        time.sleep(5)
         request = self.path.split('/')
         request = [r for r in request if r != ""]
         assert (len(request) == 3)
@@ -87,6 +85,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         assert (name == 'kv'), 'name error'
         assert (request in ProjectHTTPRequestHandler.METHODS), 'method error'
         ins = self.parse_input(input_str)
+        print("receive request: {} {}".format(request,input_str))
         out_dict = getattr(self, request + "_request")(ins)
         out_str = self.gen_output(out_dict)
         self.send_response(200)
