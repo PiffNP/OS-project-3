@@ -7,11 +7,16 @@ import io, shutil
 import json
 import time
 import threading
+import sys
+from database import Database
 
-locks=dict()
+database = Database()
+
+
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
     METHODS = {'insert', 'delete', 'get', 'update'}
     BOOL_MAP = {True: 'true', False: 'false'}
+
     @staticmethod
     def parse_input(input_str):
         ret = dict()
@@ -32,41 +37,38 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         return ret
 
     def insert_request(self, ins):
-        global locks
+        global database
         assert (self.command == "POST")
         key, value = ins['key'], ins['value']
-        print("insert with key={} value={}".format(key, value))
         # works done here
-        print("aquire lock")
-        lock.acquire()
-        print("lock aquired")
-        lock.release()
-        print("lock released")
-        outs = {'sucess': True}
+        success = database.insert(key, value)
+        outs = {'success': success}
         return outs
 
     def delete_request(self, ins):
         assert (self.command == "POST")
         key = ins['key']
-        print("delete with key={}".format(key))
         # works done here
-        outs = {'sucess': True, 'value': "deleted_val"}
+        value = database.delete(key)
+        if value:
+            outs = {'success': True, 'value': value}
+        else:
+            outs = {'success': False, 'value': ""}
         return outs
 
     def get_request(self, ins):
         assert (self.command == "GET")
         key = ins['key']
-        print("get with key={}".format(key))
         # works done here
-        outs = {'sucess': True, 'value': "get_val"}
+        outs = {'success': True, 'value': "get_val"}
         return outs
 
     def update_request(self, ins):
         assert (self.command == "POST")
         key, value = ins['key'], ins['value']
-        print("update with key={} value={}".format(key, value))
         # works done here
-        outs = {'sucess': True}
+        success = database.update(key, value)
+        outs = {'success': success}
         return outs
 
     def do_GET(self):
@@ -77,6 +79,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def handle_request(self):
         print("receive request")
+        time.sleep(5)
         request = self.path.split('/')
         request = [r for r in request if r != ""]
         assert (len(request) == 3)
@@ -90,9 +93,12 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
         self.wfile.write(out_str.encode(encoding="utf_8"))
+        print("end request")
+
 
 class ThreadingHttpServer(ThreadingMixIn, HTTPServer):
     pass
+
 
 server = ThreadingHttpServer(("", 8888), ProjectHTTPRequestHandler)
 print("Server started at {}".format(server.server_address))
