@@ -1,15 +1,17 @@
 #!usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from IPython import embed
 import urllib
 import io, shutil
 import json
+import time
+import threading
 
-
+locks=dict()
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
     METHODS = {'insert', 'delete', 'get', 'update'}
     BOOL_MAP = {True: 'true', False: 'false'}
-
     @staticmethod
     def parse_input(input_str):
         ret = dict()
@@ -30,10 +32,16 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         return ret
 
     def insert_request(self, ins):
+        global locks
         assert (self.command == "POST")
         key, value = ins['key'], ins['value']
         print("insert with key={} value={}".format(key, value))
         # works done here
+        print("aquire lock")
+        lock.acquire()
+        print("lock aquired")
+        lock.release()
+        print("lock released")
         outs = {'sucess': True}
         return outs
 
@@ -68,6 +76,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.handle_request()
 
     def handle_request(self):
+        print("receive request")
         request = self.path.split('/')
         request = [r for r in request if r != ""]
         assert (len(request) == 3)
@@ -82,7 +91,9 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(out_str.encode(encoding="utf_8"))
 
+class ThreadingHttpServer(ThreadingMixIn, HTTPServer):
+    pass
 
-server = HTTPServer(("", 8888), ProjectHTTPRequestHandler)
+server = ThreadingHttpServer(("", 8888), ProjectHTTPRequestHandler)
 print("Server started at {}".format(server.server_address))
 server.serve_forever()
