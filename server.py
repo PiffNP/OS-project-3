@@ -10,6 +10,8 @@ import threading
 import sys
 from database import Database
 
+cfg = json.load(open('settings.conf'))
+
 database = Database()
 
 
@@ -38,7 +40,8 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def insert_request(self, ins):
         global database
-        assert (self.command == "POST")
+        assert (self.command == "POST"), 'wrong HTTP method'
+        assert (len(ins) == 2 and 'key' in ins and 'value' in ins), 'wrong input'
         key, value = ins['key'], ins['value']
         # works done here
         success = database.insert(key, value)
@@ -46,7 +49,8 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         return outs
 
     def delete_request(self, ins):
-        assert (self.command == "POST")
+        assert (self.command == "POST"), 'wrong HTTP method'
+        assert (len(ins) == 1 and 'key' in ins), 'wrong input'
         key = ins['key']
         # works done here
         value = database.delete(key)
@@ -57,14 +61,20 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         return outs
 
     def get_request(self, ins):
-        assert (self.command == "GET")
-        key = ins['key']
+        assert (self.command == "GET"), 'wrong HTTP method'
+        assert (len(ins) == 1 and '?key' in ins), 'wrong input'
+        key = ins['?key']
         # works done here
-        outs = {'success': True, 'value': "get_val"}
+        value = database.get(key)
+        if value:
+            outs = {'success': True, 'value': value}
+        else:
+            outs = {'success': False, 'value': ""}
         return outs
 
     def update_request(self, ins):
-        assert (self.command == "POST")
+        assert (self.command == "POST"), 'wrong HTTP method'
+        assert (len(ins) == 2 and 'key' in ins and 'value' in ins), 'wrong input'
         key, value = ins['key'], ins['value']
         # works done here
         success = database.update(key, value)
@@ -78,16 +88,21 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.handle_request()
 
     def handle_request(self):
-        request = self.path.split('/')
-        request = [r for r in request if r != ""]
-        assert (len(request) == 3)
-        name, request, input_str = request
-        assert (name == 'kv'), 'name error'
-        assert (request in ProjectHTTPRequestHandler.METHODS), 'method error'
-        ins = self.parse_input(input_str)
-        print("receive request: {} {}".format(request,input_str))
-        out_dict = getattr(self, request + "_request")(ins)
-        out_str = self.gen_output(out_dict)
+        try:
+            request = self.path.split('/')
+            request = [r for r in request if r != ""]
+            assert (len(request) == 3)
+            name, request, input_str = request
+            assert (name == 'kv'), 'wrong name'
+            assert (request in ProjectHTTPRequestHandler.METHODS), 'no such method'
+            ins = self.parse_input(input_str)
+            print("receive request: {} {}".format(request, input_str))
+            out_dict = getattr(self, request + "_request")(ins)
+            out_str = self.gen_output(out_dict)
+        except Exception as e:
+            print("exception {}".format(e))
+            out_dict = {'success': False, 'debug_info': str(e)}
+            out_str = self.gen_output(out_dict)
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
@@ -99,6 +114,6 @@ class ThreadingHttpServer(ThreadingMixIn, HTTPServer):
     pass
 
 
-server = ThreadingHttpServer(("", 8888), ProjectHTTPRequestHandler)
+server = ThreadingHttpServer((cfg['primary'], int(cfg['port'])), ProjectHTTPRequestHandler)
 print("Server started at {}".format(server.server_address))
 server.serve_forever()
