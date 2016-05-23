@@ -16,6 +16,7 @@ def request(method_str, request_str):
         conn.request(method=method_str, url=request_str)
         # print("request {}".format(request_str))
         res = conn.getresponse()
+        # maybe we should convert the value to a unicode string before output it
         print("{}:{}".format(request_str, res.read()))
 
     t = threading.Thread(target=func, args=(request_str,))

@@ -7,19 +7,17 @@ import io, shutil
 import json
 import time
 import threading
-import http.client
 import sys
+import http.client
 from database import Database
 
-cfg = json.load(open('settings.conf'))
+cfg = json.load(open('conf/settings.conf'))
 
 database = Database()
 
-backup_server_url = cfg['backup'] + ':' + '9999'
 
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
-    METHODS = {'insert', 'delete', 'get', 'update'}
-    BOOL_MAP = {True: 'true', False: 'false'}
+    METHODS = {'insert', 'delete', 'update', 'restore'}
 
     @staticmethod
     def parse_input(input_str):
@@ -33,33 +31,16 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
 
     @staticmethod
     def gen_output(output_dict):
-        for k, v in output_dict.items():
-            if v in ProjectHTTPRequestHandler.BOOL_MAP:
-                output_dict[k] = ProjectHTTPRequestHandler.BOOL_MAP[v]
         ret = json.dumps(output_dict)
         print("output:{}".format(ret))
         return ret
-    
-    def inform_backup(self, method_str, request_str):
-        conn = http.client.HTTPConnection(backup_server_url)
-        conn.request(method=method_str, url=request_str)
-        res = conn.getresponse()
-        res = json.loads(res.read().decode('utf-8'))
-        print('from backup server: {}'.format(res))
-        success = False
-        if 'success' in res:
-           success = res['success']
-        return res, success
 
     def insert_request(self, ins):
         global database
         assert (self.command == "POST"), 'wrong HTTP method'
         assert (len(ins) == 2 and 'key' in ins and 'value' in ins), 'wrong input'
         key, value = ins['key'], ins['value']
-        quote_value = urllib.parse.quote(value, safe='/', encoding='utf-8', errors=None)
-        res, success = self.inform_backup('POST', '/bak_kv/insert/key={}&value={}'.format(key, quote_value))
-        if success:
-            success = database.insert(key, value)
+        success = database.insert(key, value)
         outs = {'success': success}
         return outs
 
@@ -67,35 +48,18 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         assert (self.command == "POST"), 'wrong HTTP method'
         assert (len(ins) == 1 and 'key' in ins), 'wrong input'
         key = ins['key']
-        res, success = self.inform_backup('POST', '/bak_kv/delete/key={}'.format(key))
-        value = None
-        if(success):
-            value = database.delete(key)
+        value = database.delete(key)
         if value:
-            outs = {'success': True, 'value': value}
+            outs = {'success': True}
         else:
-            outs = {'success': False, 'value': ""}
-        return outs
-
-    def get_request(self, ins):
-        assert (self.command == "GET"), 'wrong HTTP method'
-        assert (len(ins) == 1 and '?key' in ins), 'wrong input'
-        key = ins['?key']
-        value = database.get(key)
-        if value:
-            outs = {'success': True, 'value': value}
-        else:
-            outs = {'success': False, 'value': ""}
+            outs = {'success': False}
         return outs
 
     def update_request(self, ins):
         assert (self.command == "POST"), 'wrong HTTP method'
         assert (len(ins) == 2 and 'key' in ins and 'value' in ins), 'wrong input'
         key, value = ins['key'], ins['value']
-        quote_value = urllib.parse.quote(value, safe='/', encoding='utf-8', errors=None)
-        res, success = self.inform_backup('POST', '/bak_kv/update/key={}&value={}'.format(key, quote_value))
-        if success:
-            success = database.update(key, value)
+        success = database.update(key, value)
         outs = {'success': success}
         return outs
 
@@ -111,7 +75,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
             request = [r for r in request if r != ""]
             assert (len(request) == 3)
             name, request, input_str = request
-            assert (name == 'kv'), 'wrong name'
+            assert (name == 'bak_kv'), 'wrong name'
             assert (request in ProjectHTTPRequestHandler.METHODS), 'no such method'
             ins = self.parse_input(input_str)
             print("receive request: {} {}".format(request, input_str))
@@ -127,11 +91,11 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(out_str.encode(encoding="utf_8"))
         print("end request")
 
-
 class ThreadingHttpServer(ThreadingMixIn, HTTPServer):
     pass
 
 
-server = ThreadingHttpServer((cfg['primary'], int(cfg['port'])), ProjectHTTPRequestHandler)
-print("Server started at {}".format(server.server_address))
+#server = ThreadingHttpServer((cfg['backup'], int(cfg['port'])), ProjectHTTPRequestHandler)
+server = ThreadingHttpServer((cfg['backup'], 9999), ProjectHTTPRequestHandler)
+print("Backup server started at {}".format(server.server_address))
 server.serve_forever()
