@@ -7,7 +7,7 @@ import sys
 import http.client
 from database import Database
 
-cfg = json.load(open('settings.conf'))
+cfg = json.load(open('conf/settings.conf'))
 server_url = 'localhost:8888'
 database = Database()
 

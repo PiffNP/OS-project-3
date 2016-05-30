@@ -8,7 +8,7 @@ import http.client
 import sys
 from database import Database
 
-cfg = json.load(open('settings.conf'))
+cfg = json.load(open('conf/settings.conf'))
 
 database = Database()
 
