@@ -15,21 +15,41 @@ cfg = json.load(open('settings.conf'))
 
 database = Database()
 
-backup_server_url = cfg['backup'] + ':' + '9999'
+backup_server_url = "localhost:9999"
+
+
+def load_database():
+    conn = http.client.HTTPConnection(backup_server_url)
+    try:
+        conn.request(method="GET", url="/bak_kv/dump/k=0")
+    except (ConnectionRefusedError, ConnectionResetError):
+        print("backup server not found")
+        return
+    res = conn.getresponse()
+    res = json.loads(res.read().decode('utf-8'))
+    database.load(res['data'])
+    print("recover complete")
+
+load_database()
 
 def inform_backup(method_str, request_str):
     conn = http.client.HTTPConnection(backup_server_url)
-    conn.request(method=method_str, url=request_str)
+    try:
+        conn.request(method=method_str, url=request_str,headers={"Time":str(time.time())})
+    except ConnectionRefusedError and ConnectionResetError:
+        print("backup server not found")
+        return None, False
     res = conn.getresponse()
     res = json.loads(res.read().decode('utf-8'))
-    print('from backup server: {}'.format(res))
+    #print('from backup server: {}'.format(res))
     success = False
     if 'success' in res:
         success = res['success']
     return res, success
 
+
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
-    METHODS = {'insert', 'delete', 'get', 'update'}
+    METHODS = {'insert', 'delete', 'get', 'update', 'dump'}
     BOOL_MAP = {True: 'true', False: 'false'}
 
     @staticmethod
@@ -48,16 +68,23 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
             if v in ProjectHTTPRequestHandler.BOOL_MAP:
                 output_dict[k] = ProjectHTTPRequestHandler.BOOL_MAP[v]
         ret = json.dumps(output_dict)
-        print("output:{}".format(ret))
+        #print("output:{}".format(ret))
         return ret
-    
+
+    def dump_request(self, ins):
+        # we need to verify it is the backup server that calls us
+        assert (self.command == "GET"), "wrong HTTP method"
+        data_str = database.dump()
+        outs = {'data': data_str}
+        return outs
+
     def insert_request(self, ins):
-        global database
         assert (self.command == "POST"), 'wrong HTTP method'
         assert (len(ins) == 2 and 'key' in ins and 'value' in ins), 'wrong input'
         key, value = ins['key'], ins['value']
         quote_value = urllib.parse.quote(value, safe='/', encoding='utf-8', errors=None)
-        success = database.insert(key, value, inform_backup, ('POST', '/bak_kv/insert/key={}&value={}'.format(key, quote_value)))
+        success = database.insert(key, value, inform_backup,
+                                  ('POST', '/bak_kv/insert/key={}&value={}'.format(key, quote_value)))
         outs = {'success': success}
         return outs
 
@@ -89,7 +116,8 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         assert (len(ins) == 2 and 'key' in ins and 'value' in ins), 'wrong input'
         key, value = ins['key'], ins['value']
         quote_value = urllib.parse.quote(value, safe='/', encoding='utf-8', errors=None)
-        success = database.update(key, value, inform_backup, ('POST', '/bak_kv/update/key={}&value={}'.format(key, quote_value)))
+        success = database.update(key, value, inform_backup,
+                                  ('POST', '/bak_kv/update/key={}&value={}'.format(key, quote_value)))
         outs = {'success': success}
         return outs
 
@@ -100,15 +128,16 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.handle_request()
 
     def handle_request(self):
+        print("new request")
         try:
             request = self.path.split('/')
             request = [r for r in request if r != ""]
-            assert (len(request) == 3)
+            assert (len(request) == 3), 'wrong request length'
             name, request, input_str = request
             assert (name == 'kv'), 'wrong name'
             assert (request in ProjectHTTPRequestHandler.METHODS), 'no such method'
             ins = self.parse_input(input_str)
-            print("receive request: {} {}".format(request, input_str))
+            #print("receive request: {} {}".format(request, input_str))
             out_dict = getattr(self, request + "_request")(ins)
             out_str = self.gen_output(out_dict)
         except Exception as e:
@@ -119,7 +148,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
         self.wfile.write(out_str.encode(encoding="utf_8"))
-        print("end request")
+        #print("end request")
 
 
 class ThreadingHttpServer(ThreadingMixIn, HTTPServer):

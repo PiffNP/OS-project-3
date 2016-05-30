@@ -2,9 +2,13 @@ import threading
 import time
 from threading import Lock
 from read_write_lock import ReadWriteLock
+from IPython import embed
+import json
+
 
 def foo():
     return None, True
+
 
 class Database(object):
     def __init__(self):
@@ -35,7 +39,7 @@ class Database(object):
         if key not in self.data:
             self.modify_lock.release_write()
             return None
-        val = self.data.pop(key) # can safely be done because the acquire_write
+        val = self.data.pop(key)  # can safely be done because the acquire_write
         self.locks.pop(key)  # because acquire_write on modify_lock, no one holds this lock so no problem
         self.modify_lock.release_write()
         return val
@@ -68,11 +72,16 @@ class Database(object):
         self.modify_lock.release_read()  # don't want dlock to be deleted in case
         return True
 
-    #def restore(self, func=foo, args=())
-    #    self.modify_lock.acquire_write()
-    #    res, success = func(*args)
-    #    if not success:
-    #        return False
-    #    
-    #    self.modify_lock.release_write()
-    #    return True
+    def dump(self):
+        self.modify_lock.acquire_read()
+        ret_str=json.dumps(self.data)
+        self.modify_lock.release_read()
+        return ret_str
+
+    def load(self, dict_string):
+        self.modify_lock.acquire_write()
+        self.data = json.loads(dict_string)
+        for key in self.data:
+            self.locks[key] = ReadWriteLock()
+        self.modify_lock.release_write()
+        return True
