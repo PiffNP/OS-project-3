@@ -21,7 +21,7 @@ backup_server_url = "localhost:9999"
 def load_database():
     conn = http.client.HTTPConnection(backup_server_url)
     try:
-        conn.request(method="GET", url="/bak_kv/dump/k=0")
+        conn.request(method="GET", url="/bak_kv/serialize")
     except (ConnectionRefusedError, ConnectionResetError):
         print("backup server not found")
         return
@@ -30,18 +30,20 @@ def load_database():
     database.load(res['data'])
     print("recover complete")
 
+
 load_database()
+
 
 def inform_backup(method_str, request_str):
     conn = http.client.HTTPConnection(backup_server_url)
     try:
-        conn.request(method=method_str, url=request_str,headers={"Time":str(time.time())})
+        conn.request(method=method_str, url=request_str, headers={"Time": str(time.time())})
     except ConnectionRefusedError and ConnectionResetError:
         print("backup server not found")
         return None, False
     res = conn.getresponse()
     res = json.loads(res.read().decode('utf-8'))
-    #print('from backup server: {}'.format(res))
+    # print('from backup server: {}'.format(res))
     success = False
     if 'success' in res:
         success = res['success']
@@ -49,11 +51,13 @@ def inform_backup(method_str, request_str):
 
 
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
-    METHODS = {'insert', 'delete', 'get', 'update', 'dump'}
+    METHODS = {'insert', 'delete', 'get', 'update', 'serialize'}
     BOOL_MAP = {True: 'true', False: 'false'}
 
     @staticmethod
     def parse_input(input_str):
+        if input_str is None:
+            return dict()
         ret = dict()
         inputs = input_str.split('&')
         for input in inputs:
@@ -68,14 +72,15 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
             if v in ProjectHTTPRequestHandler.BOOL_MAP:
                 output_dict[k] = ProjectHTTPRequestHandler.BOOL_MAP[v]
         ret = json.dumps(output_dict)
-        #print("output:{}".format(ret))
+        # print("output:{}".format(ret))
         return ret
 
-    def dump_request(self, ins):
+    def serialize_request(self, ins):
         # we need to verify it is the backup server that calls us
         assert (self.command == "GET"), "wrong HTTP method"
-        data_str = database.dump()
+        data_str = database.serialize()
         outs = {'data': data_str}
+        print("serialized")
         return outs
 
     def insert_request(self, ins):
@@ -132,12 +137,19 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         try:
             request = self.path.split('/')
             request = [r for r in request if r != ""]
-            assert (len(request) == 3), 'wrong request length'
-            name, request, input_str = request
-            assert (name == 'kv'), 'wrong name'
+            if len(request) == 3:
+                name, request, input_str = request
+            elif len(request) == 2:
+                name, request = request
+                input_str = None
+            else:
+                assert (False), 'wrong input size'
+            assert (name in ('kv', 'kvman')), 'wrong name'
             assert (request in ProjectHTTPRequestHandler.METHODS), 'no such method'
+            print("begin parse")
             ins = self.parse_input(input_str)
-            #print("receive request: {} {}".format(request, input_str))
+            print(ins)
+            # print("receive request: {} {}".format(request, input_str))
             out_dict = getattr(self, request + "_request")(ins)
             out_str = self.gen_output(out_dict)
         except Exception as e:
@@ -148,7 +160,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
         self.wfile.write(out_str.encode(encoding="utf_8"))
-        #print("end request")
+        # print("end request")
 
 
 class ThreadingHttpServer(ThreadingMixIn, HTTPServer):

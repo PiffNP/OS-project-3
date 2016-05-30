@@ -19,8 +19,8 @@ database = Database()
 def load_database():
     conn = http.client.HTTPConnection(server_url)
     try:
-        conn.request(method="GET", url="/kv/dump/k=0")
-    except (ConnectionRefusedError,ConnectionResetError):
+        conn.request(method="GET", url="/kv/serialize")
+    except (ConnectionRefusedError, ConnectionResetError):
         print("primary server not found or not work")
         return
     res = conn.getresponse()
@@ -28,14 +28,17 @@ def load_database():
     database.load(res['data'])
     print("recover complete")
 
+
 load_database()
 
 
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
-    METHODS = {'insert', 'delete', 'update', 'restore', 'dump'}
+    METHODS = {'insert', 'delete', 'update', 'restore', 'serialize'}
 
     @staticmethod
     def parse_input(input_str):
+        if input_str is None:
+            return None
         ret = dict()
         inputs = input_str.split('&')
         for input in inputs:
@@ -47,13 +50,13 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
     @staticmethod
     def gen_output(output_dict):
         ret = json.dumps(output_dict)
-        #print("output:{}".format(ret))
+        # print("output:{}".format(ret))
         return ret
 
-    def dump_request(self, ins):
+    def serialize_request(self, ins):
         # we need to verify it is the other server that calls us
         assert (self.command == "GET"), "wrong HTTP method"
-        data_str = database.dump()
+        data_str = database.serialize()
         outs = {'data': data_str}
         return outs
 
@@ -92,16 +95,21 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.handle_request()
 
     def handle_request(self):
-        #print("receive request")
+        # print("receive request")
         try:
             request = self.path.split('/')
             request = [r for r in request if r != ""]
-            assert (len(request) == 3), "invalid request"
-            name, request, input_str = request
-            assert (name == 'bak_kv'), 'wrong name'
+            if len(request) == 3:
+                name, request, input_str = request
+            elif len(request) == 2:
+                name, request = request
+                input_str = None
+            else:
+                assert (False), 'wrong input size'
+            assert (name in ('bak_kv', 'kvman')), 'wrong name'
             assert (request in ProjectHTTPRequestHandler.METHODS), 'no such method'
             ins = self.parse_input(input_str)
-            #print("receive request: {} {}".format(request, input_str))
+            # print("receive request: {} {}".format(request, input_str))
             out_dict = getattr(self, request + "_request")(ins)
             out_str = self.gen_output(out_dict)
         except Exception as e:
@@ -112,7 +120,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.end_headers()
         self.wfile.write(out_str.encode(encoding="utf_8"))
-        #print("end request")
+        # print("end request")
 
 
 class ThreadingHttpServer(ThreadingMixIn, HTTPServer):

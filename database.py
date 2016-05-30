@@ -72,7 +72,7 @@ class Database(object):
         self.modify_lock.release_read()  # don't want dlock to be deleted in case
         return True
 
-    def dump(self):
+    def serialize(self):
         self.modify_lock.acquire_read()
         ret_str=json.dumps(self.data)
         self.modify_lock.release_read()
