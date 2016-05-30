@@ -17,6 +17,17 @@ database = Database()
 
 backup_server_url = cfg['backup'] + ':' + '9999'
 
+def inform_backup(method_str, request_str):
+    conn = http.client.HTTPConnection(backup_server_url)
+    conn.request(method=method_str, url=request_str)
+    res = conn.getresponse()
+    res = json.loads(res.read().decode('utf-8'))
+    print('from backup server: {}'.format(res))
+    success = False
+    if 'success' in res:
+        success = res['success']
+    return res, success
+
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
     METHODS = {'insert', 'delete', 'get', 'update'}
     BOOL_MAP = {True: 'true', False: 'false'}
@@ -40,26 +51,13 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         print("output:{}".format(ret))
         return ret
     
-    def inform_backup(self, method_str, request_str):
-        conn = http.client.HTTPConnection(backup_server_url)
-        conn.request(method=method_str, url=request_str)
-        res = conn.getresponse()
-        res = json.loads(res.read().decode('utf-8'))
-        print('from backup server: {}'.format(res))
-        success = False
-        if 'success' in res:
-           success = res['success']
-        return res, success
-
     def insert_request(self, ins):
         global database
         assert (self.command == "POST"), 'wrong HTTP method'
         assert (len(ins) == 2 and 'key' in ins and 'value' in ins), 'wrong input'
         key, value = ins['key'], ins['value']
         quote_value = urllib.parse.quote(value, safe='/', encoding='utf-8', errors=None)
-        res, success = self.inform_backup('POST', '/bak_kv/insert/key={}&value={}'.format(key, quote_value))
-        if success:
-            success = database.insert(key, value)
+        success = database.insert(key, value, inform_backup, ('POST', '/bak_kv/insert/key={}&value={}'.format(key, quote_value)))
         outs = {'success': success}
         return outs
 
@@ -67,10 +65,8 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         assert (self.command == "POST"), 'wrong HTTP method'
         assert (len(ins) == 1 and 'key' in ins), 'wrong input'
         key = ins['key']
-        res, success = self.inform_backup('POST', '/bak_kv/delete/key={}'.format(key))
         value = None
-        if(success):
-            value = database.delete(key)
+        value = database.delete(key, inform_backup, ('POST', '/bak_kv/delete/key={}'.format(key)))
         if value:
             outs = {'success': True, 'value': value}
         else:
@@ -93,9 +89,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         assert (len(ins) == 2 and 'key' in ins and 'value' in ins), 'wrong input'
         key, value = ins['key'], ins['value']
         quote_value = urllib.parse.quote(value, safe='/', encoding='utf-8', errors=None)
-        res, success = self.inform_backup('POST', '/bak_kv/update/key={}&value={}'.format(key, quote_value))
-        if success:
-            success = database.update(key, value)
+        success = database.update(key, value, inform_backup, ('POST', '/bak_kv/update/key={}&value={}'.format(key, quote_value)))
         outs = {'success': success}
         return outs
 

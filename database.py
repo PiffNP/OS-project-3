@@ -3,6 +3,8 @@ import time
 from threading import Lock
 from read_write_lock import ReadWriteLock
 
+def foo():
+    return None, True
 
 class Database(object):
     def __init__(self):
@@ -10,8 +12,12 @@ class Database(object):
         self.locks = dict()  # locks on each data
         self.modify_lock = ReadWriteLock()  # lock on modification of data structure
 
-    def insert(self, key, value):
+    def insert(self, key, value, func=foo, args=()):
         self.modify_lock.acquire_write()
+        res, success = func(*args)
+        if not success:
+            self.modify_lock.release_write()
+            return False
         if key in self.data:
             self.modify_lock.release_write()
             return False
@@ -20,8 +26,12 @@ class Database(object):
         self.modify_lock.release_write()
         return True
 
-    def delete(self, key):
+    def delete(self, key, func=foo, args=()):
         self.modify_lock.acquire_write()
+        res, success = func(*args)
+        if not success:
+            self.modify_lock.release_write()
+            return False
         if key not in self.data:
             self.modify_lock.release_write()
             return None
@@ -42,8 +52,12 @@ class Database(object):
         self.modify_lock.release_read()  # don't want dlock to be deleted in case
         return val
 
-    def update(self, key, value):
+    def update(self, key, value, func=foo, args=()):
         self.modify_lock.acquire_read()
+        res, success = func(*args)
+        if not success:
+            self.modify_lock.release_read()
+            return False
         dlock = self.locks.get(key, None)
         if dlock is None:
             self.modify_lock.release_read()
@@ -53,3 +67,12 @@ class Database(object):
         dlock.release_write()
         self.modify_lock.release_read()  # don't want dlock to be deleted in case
         return True
+
+    #def restore(self, func=foo, args=())
+    #    self.modify_lock.acquire_write()
+    #    res, success = func(*args)
+    #    if not success:
+    #        return False
+    #    
+    #    self.modify_lock.release_write()
+    #    return True
