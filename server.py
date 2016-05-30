@@ -1,12 +1,9 @@
 #!usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
-from IPython import embed
 import urllib
-import io, shutil
 import json
 import time
-import threading
 import http.client
 import sys
 from database import Database
@@ -51,7 +48,7 @@ def inform_backup(method_str, request_str):
 
 
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
-    METHODS = {'insert', 'delete', 'get', 'update', 'serialize'}
+    METHODS = {'insert', 'delete', 'get', 'update', 'serialize','countkey','dump','shutdown'}
     BOOL_MAP = {True: 'true', False: 'false'}
 
     @staticmethod
@@ -68,19 +65,33 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
 
     @staticmethod
     def gen_output(output_dict):
-        for k, v in output_dict.items():
-            if v in ProjectHTTPRequestHandler.BOOL_MAP:
-                output_dict[k] = ProjectHTTPRequestHandler.BOOL_MAP[v]
+        if isinstance(output_dict, dict):
+            for k, v in output_dict.items():
+                if v in ProjectHTTPRequestHandler.BOOL_MAP:
+                    output_dict[k] = ProjectHTTPRequestHandler.BOOL_MAP[v]
         ret = json.dumps(output_dict)
         # print("output:{}".format(ret))
         return ret
+
+    def countkey_request(self, ins):
+        assert (self.command == "GET"), "wrong HTTP method"
+        keycount = database.countkey()
+        outs = {'result': str(keycount)}
+        return outs
+
+    def dump_request(self, ins):
+        assert (self.command == "GET"), "wrong HTTP method"
+        outs = database.dump()
+        return outs
+
+    def shutdown_request(self, ins):
+        sys.exit()
 
     def serialize_request(self, ins):
         # we need to verify it is the backup server that calls us
         assert (self.command == "GET"), "wrong HTTP method"
         data_str = database.serialize()
         outs = {'data': data_str}
-        print("serialized")
         return outs
 
     def insert_request(self, ins):
@@ -133,7 +144,6 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.handle_request()
 
     def handle_request(self):
-        print("new request")
         try:
             request = self.path.split('/')
             request = [r for r in request if r != ""]
@@ -146,9 +156,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
                 assert (False), 'wrong input size'
             assert (name in ('kv', 'kvman')), 'wrong name'
             assert (request in ProjectHTTPRequestHandler.METHODS), 'no such method'
-            print("begin parse")
             ins = self.parse_input(input_str)
-            print(ins)
             # print("receive request: {} {}".format(request, input_str))
             out_dict = getattr(self, request + "_request")(ins)
             out_str = self.gen_output(out_dict)

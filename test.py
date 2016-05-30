@@ -35,6 +35,8 @@ def main():
     time.sleep(0.1)
     for key in keys:
         request("GET", query_url.format(key))
-
+    time.sleep(10)
+    request("GET","/kvman/countkey")
+    request("GET","/kvman/dump")
 if __name__ == '__main__':
     main()

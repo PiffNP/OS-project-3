@@ -1,12 +1,8 @@
 #!usr/bin/env python3
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from socketserver import ThreadingMixIn
-from IPython import embed
 import urllib
-import io, shutil
 import json
-import time
-import threading
 import sys
 import http.client
 from database import Database
@@ -33,7 +29,7 @@ load_database()
 
 
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
-    METHODS = {'insert', 'delete', 'update', 'restore', 'serialize'}
+    METHODS = {'insert', 'delete', 'get', 'update', 'serialize','countkey','dump','shutdown'}
 
     @staticmethod
     def parse_input(input_str):
@@ -52,6 +48,20 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         ret = json.dumps(output_dict)
         # print("output:{}".format(ret))
         return ret
+
+    def countkey_request(self, ins):
+        assert (self.command == "GET"), "wrong HTTP method"
+        keycount = database.countkey()
+        outs = {'result': str(keycount)}
+        return outs
+
+    def dump_request(self, ins):
+        assert (self.command == "GET"), "wrong HTTP method"
+        outs = database.dump()
+        return outs
+
+    def shutdown_request(self, ins):
+        sys.exit()
 
     def serialize_request(self, ins):
         # we need to verify it is the other server that calls us

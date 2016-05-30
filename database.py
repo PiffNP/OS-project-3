@@ -1,8 +1,4 @@
-import threading
-import time
-from threading import Lock
 from read_write_lock import ReadWriteLock
-from IPython import embed
 import json
 
 
@@ -73,9 +69,9 @@ class Database(object):
         return True
 
     def serialize(self):
-        self.modify_lock.acquire_read()
+        self.modify_lock.acquire_write()
         ret_str=json.dumps(self.data)
-        self.modify_lock.release_read()
+        self.modify_lock.release_write()
         return ret_str
 
     def load(self, dict_string):
@@ -85,3 +81,18 @@ class Database(object):
             self.locks[key] = ReadWriteLock()
         self.modify_lock.release_write()
         return True
+
+    def countkey(self):
+        self.modify_lock.acquire_read()
+        ret_val=len(self.data)
+        self.modify_lock.release_read()
+        return ret_val
+
+    def dump(self):
+        self.modify_lock.acquire_write()
+        ret_val=[]
+        for key,value in self.data.items():
+            ret_val.append([key,value])
+        self.modify_lock.release_write()
+        print(ret_val)
+        return ret_val
