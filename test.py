@@ -4,6 +4,7 @@ import threading
 import json
 import time
 import sys
+import os
 from read_write_lock import ReadWriteLock
 keys=[str(i) for i in range(10)]
 server_url = "localhost:8888"
@@ -86,7 +87,9 @@ class Test:
 
 
     def main(self):
-
+        os.system("bin//start_server -p")
+        os.system("bin//start_server -b")
+        time.sleep(2)
         for key in keys:
             self.request("POST", insert_url.format(key,key), 'insert')
         time.sleep(2)
@@ -100,6 +103,8 @@ class Test:
             self.request("GET", query_url.format(key), 'get')
         time.sleep(10)
 
+        os.system("bin//stop_server -p")
+        os.system("bin//stop_server -b")
         #request("GET","/kvman/countkey")
         #request("GET","/kvman/dump")
 
