@@ -7,7 +7,7 @@ import sys
 import http.client
 from database import Database
 
-cfg = json.load(open('settings.conf'))
+cfg = json.load(open('conf/settings.conf'))
 server_url = 'localhost:8888'
 database = Database()
 
@@ -96,6 +96,17 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         key, value = ins['key'], ins['value']
         success = database.update(key, value)
         outs = {'success': success}
+        return outs
+
+    def get_request(self, ins):
+        assert (self.command == "GET"), 'wrong HTTP method'
+        assert (len(ins) == 1 and '?key' in ins), 'wrong input'
+        key = ins['?key']
+        value = database.get(key)
+        if value:
+            outs = {'success': True, 'value': value}
+        else:
+            outs = {'success': False, 'value': ""}
         return outs
 
     def do_GET(self):
