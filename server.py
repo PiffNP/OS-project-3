@@ -48,7 +48,7 @@ def inform_backup(method_str, request_str):
 
 
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
-    METHODS = {'insert', 'delete', 'get', 'update', 'serialize','countkey','dump','shutdown'}
+    METHODS = {'insert', 'delete', 'get', 'update', 'serialize', 'countkey', 'dump', 'shutdown'}
     BOOL_MAP = {True: 'true', False: 'false'}
 
     @staticmethod
