@@ -8,7 +8,7 @@ import http.client
 import sys
 from database import Database
 
-cfg = json.load(open('conf/settings.conf'))
+cfg = json.load(open('settings.conf'))
 
 database = Database()
 
@@ -48,7 +48,7 @@ def inform_backup(method_str, request_str):
 
 
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
-    METHODS = {'insert', 'delete', 'get', 'update', 'serialize', 'countkey', 'dump', 'shutdown'}
+    METHODS = {'insert', 'delete', 'get', 'update', 'serialize','countkey','dump','shutdown'}
     BOOL_MAP = {True: 'true', False: 'false'}
 
     @staticmethod
@@ -120,8 +120,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         assert (self.command == "GET"), 'wrong HTTP method'
         assert (len(ins) == 1 and '?key' in ins), 'wrong input'
         key = ins['?key']
-        value = database.get(key, inform_backup,
-                             ('GET', '/bak_kv/get/?key={}'.format(key)))
+        value = database.get(key)
         if value:
             outs = {'success': True, 'value': value}
         else:
