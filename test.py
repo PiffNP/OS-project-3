@@ -98,7 +98,7 @@ class Test:
                       self.insert_statistic[round(len(self.insert_statistic) * 0.9)],
                       self.get_statistic[round(len(self.get_statistic) * 0.9)]))
 
-    def mutiple_key_test(self):
+    def multiple_key_test(self):
         # os.system("bin//start_server -p")
         # os.system("bin//start_server -b")
         time.sleep(1)
