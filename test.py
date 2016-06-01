@@ -136,7 +136,7 @@ class Test:
             time.sleep(0.005)
             self.request("POST", update_url.format(key, str(i)), 'update')
             time.sleep(0.005)
-            self.request("GET", query_url.format(key), 'get', expect_dict={'success': 'true', 'value': str(i)})
+            self.request("GET", query_url.format(key), 'get', expect_dict={'success': 'false', 'value': str(i)})
         time.sleep(1)
 
     def key_delete_test(self):
