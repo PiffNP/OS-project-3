@@ -100,7 +100,7 @@ class Test:
                       self.get_statistic[round(len(self.get_statistic) * 0.9)]))
 
     def multiple_key_test(self):
-        keys = ["multiple_"+str(i) for i in range(100)]
+        keys = ["multiple_"+str(i) for i in range(256)]
         # os.system("bin//start_server -p")
         # os.system("bin//start_server -b")
         time.sleep(1)
@@ -132,9 +132,9 @@ class Test:
         self.request("POST",insert_url.format(key,value),'insert')
 
         for i in range(iteration_time):
-            time.sleep(0.01)
+            time.sleep(0.005)
             self.request("POST",update_url.format(key,str(i)),'update')
-            time.sleep(0.01)
+            time.sleep(0.005)
             self.request("GET",query_url.format(key),'get',expect_dict={'success':'true','value':str(i)})
 
         time.sleep(1)
@@ -143,12 +143,12 @@ class Test:
         time.sleep(1)
         key = 'delete_test'
         value="delete_val"
-        iteration_time=5
+        iteration_time=200
 
         for i in range(iteration_time):
-            time.sleep(0.01)
+            time.sleep(0.005)
             self.request("POST",insert_url.format(key,value),'insert')
-            time.sleep(0.01)
+            time.sleep(0.005)
             self.request("POST",delete_url.format(key),'delete')
         time.sleep(1)
 
