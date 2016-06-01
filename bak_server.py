@@ -8,7 +8,7 @@ import http.client
 from database import Database
 
 cfg = json.load(open('conf/settings.conf'))
-server_url = 'localhost:8888'
+server_url = cfg['primary'] + ":" + cfg['port']
 database = Database()
 
 
@@ -149,6 +149,6 @@ class ThreadingHttpServer(ThreadingMixIn, HTTPServer):
 
 
 # server = ThreadingHttpServer((cfg['backup'], int(cfg['port'])), ProjectHTTPRequestHandler)
-server = ThreadingHttpServer((cfg['backup'], 9999), ProjectHTTPRequestHandler)
+server = ThreadingHttpServer((cfg['backup'], int(cfg['port'])), ProjectHTTPRequestHandler)
 print("Backup server started at {}".format(server.server_address))
 server.serve_forever()

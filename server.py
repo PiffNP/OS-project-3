@@ -12,7 +12,7 @@ cfg = json.load(open('conf/settings.conf'))
 
 database = Database()
 
-backup_server_url = "localhost:9999"
+backup_server_url = cfg['backup'] + ":" + cfg['port']
 
 
 def load_database():
