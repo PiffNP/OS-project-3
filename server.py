@@ -6,6 +6,7 @@ import json
 import time
 import http.client
 import sys
+import os
 from database import Database
 
 cfg = json.load(open('conf/settings.conf'))
@@ -85,7 +86,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         return outs
 
     def shutdown_request(self, ins):
-        sys.exit()
+        os.system('bin/stop_server -p')
 
     def serialize_request(self, ins):
         # we need to verify it is the backup server that calls us

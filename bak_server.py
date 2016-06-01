@@ -61,7 +61,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         return outs
 
     def shutdown_request(self, ins):
-        sys.exit()
+        os.system('bin/stop_server -b')
 
     def serialize_request(self, ins):
         # we need to verify it is the other server that calls us
