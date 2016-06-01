@@ -137,11 +137,11 @@ class Test:
         time.sleep(1)
 
     def key_delete_test(self):
-        print("single key pressure test")
+        print("key deletion test")
         time.sleep(1)
         keys = ["delete_"+str(i) for i in range(100)]
         value="delete_val"
-        iteration_time=100
+        iteration_time=5
 
         for i in range(iteration_time):
             time.sleep(0.01)
