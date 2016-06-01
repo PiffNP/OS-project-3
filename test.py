@@ -99,7 +99,7 @@ class Test:
                       self.get_statistic[round(len(self.get_statistic) * 0.9)]))
 
     def multiple_key_test(self):
-        keys = ["multiple_" + str(i) for i in range(256)]
+        keys = ["multiple_" + str(i) for i in range(100)]
         # os.system("bin//start_server -p")
         # os.system("bin//start_server -b")
         time.sleep(1)
