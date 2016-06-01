@@ -132,5 +132,6 @@ class Test:
         time.sleep(2)
 
 a = Test()
+a.single_key_pressure_test()
 a.main()
 a.analysis()
