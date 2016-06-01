@@ -118,14 +118,13 @@ class Test:
         time.sleep(1)
         for key in keys:
             self.request("POST",delete_url.format(key),'delete')
-        time.sleep(5)
+        time.sleep(1)
 
         # os.system("bin//stop_server -p")
         # os.system("bin//stop_server -b")
         # request("GET","/kvman/countkey")
         # request("GET","/kvman/dump")
     def single_key_pressure_test(self):
-        print("single key pressure test")
         time.sleep(1)
         key="single_pressure"
         value="init_val"
@@ -141,7 +140,6 @@ class Test:
         time.sleep(1)
 
     def key_delete_test(self):
-        print("key deletion test")
         time.sleep(1)
         key = 'delete_test'
         value="delete_val"
@@ -150,9 +148,9 @@ class Test:
         for i in range(iteration_time):
             time.sleep(0.01)
             self.request("POST",insert_url.format(key,value),'insert')
-            time.sleep(0.1)
+            time.sleep(0.01)
             self.request("POST",delete_url.format(key),'delete')
-        time.sleep(5)
+        time.sleep(1)
 
 
 a = Test()
