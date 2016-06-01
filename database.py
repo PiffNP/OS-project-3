@@ -43,7 +43,7 @@ class Database(object):
             return None
         lock=self.locks[key]
         self.modify_lock.release_write()
-        lock.aquire_write()
+        lock.acquire_write()
 
         res, success = func(*args)
 
