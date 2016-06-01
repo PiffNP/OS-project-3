@@ -10,11 +10,14 @@ from read_write_lock import ReadWriteLock
 cfg = json.load(open('conf/settings.conf'))
 
 server_url = cfg['primary'] + ":" + cfg['port']
+bak_server_url = cfg['backup'] + ":" + cfg['port']
 
 insert_url = "/kv/insert/key={0}&value={1}"
 query_url = "/kv/get/?key={0}"
 update_url = "/kv/update/key={0}&value={1}"
 delete_url = "/kv/delete/key={0}"
+dump_url = "/kvman/dump"
+count_url = "/kvman/countkey"
 
 
 class Test:
@@ -25,6 +28,7 @@ class Test:
     total_insert_num = 0
     suc_insert_num = 0
     result_flag = 'success'
+    
     def same_dict(self,dict1,dict2):
         if len(dict1)!=len(dict2):return False
         for key,value in dict1.items():
@@ -33,6 +37,7 @@ class Test:
             if dict2[key]!=value:
                 return False
         return True
+    
     def request(self, method_str, request_str, request_type=None, expect_dict=None):
         def func(request):
             if request_type == 'insert':
@@ -54,6 +59,9 @@ class Test:
                 print("request {}".format(request_str))
             res = conn.getresponse()
             res_json = json.loads(res.read().decode('utf-8'))
+            if (request_type == 'delete' or request_type == 'get'):
+                if res_json['success'] == 'false':
+                    res_json['value'] = None
             if expect_dict is not None and not self.same_dict(expect_dict,res_json):
                 print("failed at {}!={}".format(expect_dict, res_json))
                 self.result_flag = 'fail'
@@ -82,6 +90,32 @@ class Test:
         t = threading.Thread(target=func, args=(request_str,))
         t.start()
 
+    def bak_request(self, method_str, request_str, request_type=None, expect_dict=None):
+        def func(request):
+            flag = False
+            fail_num = 0
+            while not flag and fail_num < 2:
+                try:
+                    conn = http.client.HTTPConnection(server_url)
+                    conn.request(method=method_str, url=request_str)
+                    flag = True
+                except ConnectionRefusedError and ConnectionResetError:
+                    fail_num += 1
+
+            if len(sys.argv) == 1 and sys.argv[0] == '-d':
+                print("request {}".format(request_str))
+            res = conn.getresponse()
+            res_json = json.loads(res.read().decode('utf-8'))
+            if expect_dict is not None and len(set(res_json)^set(expect_dict))!=0:
+                print("failed at {}!={}".format(expect_dict,res_json))
+                self.result_flag='fail'
+            # maybe we should convert the value to a unicode string before output it
+            if len(sys.argv) == 1 and sys.argv[0] == '-d':
+                print("{}:{}".format(request_str, res_json))
+
+        t = threading.Thread(target=func, args=(request_str,))
+        t.start()
+
     def analysis(self):
         if len(self.insert_statistic) == 0:
             self.insert_statistic.append(0)
@@ -104,6 +138,48 @@ class Test:
                       self.get_statistic[int(len(self.get_statistic) * 0.7)],
                       self.insert_statistic[int(len(self.insert_statistic) * 0.9)],
                       self.get_statistic[int(len(self.get_statistic) * 0.9)]))
+
+    def basic_func_test(self):
+        time.sleep(1)
+        key = "basic_func" + "hello"
+        value = "basic_func" + "world"
+        self.request("POST",insert_url.format(key,value),'insert',{'success':'true'})
+        time.sleep(0.1)
+        self.request("POST",insert_url.format(key,value),'insert',{'success':'false'})
+        time.sleep(0.1)
+        self.request("POST",update_url.format(key,value + '!'),'update',{'success':'true'})
+        time.sleep(0.1)
+        self.request("POST",update_url.format(value + '!', key),'update',{'success':'false'})
+        time.sleep(0.1)
+        self.request("GET",query_url.format(key),'get',{'success':'true', 'value':value+'!'})
+        time.sleep(0.1)
+        self.request("GET",query_url.format(value),'get',{'success':'false', 'value':None})
+        time.sleep(0.1)
+        self.request("POST",delete_url.format(key),'delete',{'success':'true', 'value':value+'!'})
+        time.sleep(0.1)
+        self.request("POST",delete_url.format(key),'delete',{'success':'false', 'value':None})
+        time.sleep(5)
+        
+        self.request("GET",count_url.format(key),'count',{'result':'0'})
+        self.bak_request("GET",count_url.format(key),'count',{'result':'0'})
+        self.request("POST",insert_url.format(key,value),'insert',{'success':'true'})
+        time.sleep(3)
+        self.request("POST",insert_url.format(key,value),'insert',{'success':'true'})
+        self.request("POST",insert_url.format(key + '2',value + '2'),'insert',{'success':'true'})
+        self.request("POST",insert_url.format(key + '3',value + '3'),'insert',{'success':'true'})
+        time.sleep(3)
+        self.request("GET",count_url.format(key),'count',{'result':'3'})
+        self.bak_request("GET",count_url.format(key),'count',{'result':'3'})
+        self.request("GET",count_url.format(key),'count',{key:value, key+'2':value+'2', key+'3':value+'3'})
+        self.bak_request("GET",count_url.format(key),'count',{key:value, key+'2':value+'2', key+'3':value+'3'})
+        time.sleep(10)
+
+        self.request("POST",insert_url.format(key + 'unicode', '操作系统'),'insert',{'success':'true'})
+        time.sleep(0.1)
+        self.request("GET",query_url.format(key + 'unicode'),'get',{'success':'true', 'value':'操作系统'})
+        time.sleep(0.1)
+
+
 
     def multiple_key_test(self):
         keys = ["multiple_" + str(i) for i in range(100)]
@@ -160,7 +236,8 @@ class Test:
 
 
 a = Test()
-a.key_delete_test()
-a.multiple_key_test()
-a.single_key_pressure_test()
+a.basic_func_test()
+#a.key_delete_test()
+#a.multiple_key_test()
+#a.single_key_pressure_test()
 a.analysis()
