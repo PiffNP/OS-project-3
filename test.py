@@ -139,9 +139,9 @@ class Test:
         self.request("POST", insert_url.format(key, value), 'insert')
 
         for i in range(iteration_time):
-            time.sleep(0.01)
+            time.sleep(0.02)
             self.request("POST", update_url.format(key, str(i)), 'update')
-            time.sleep(0.01)
+            time.sleep(0.02)
             self.request("GET", query_url.format(key), 'get', expect_dict={'success':'true','value':str(i)});
         time.sleep(2)
 
@@ -152,9 +152,9 @@ class Test:
         iteration_time = 200
 
         for i in range(iteration_time):
-            time.sleep(0.01)
+            time.sleep(0.02)
             self.request("POST", insert_url.format(key, value), 'insert')
-            time.sleep(0.01)
+            time.sleep(0.02)
             self.request("POST", delete_url.format(key), 'delete')
         time.sleep(2)
 
