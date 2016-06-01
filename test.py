@@ -142,8 +142,8 @@ class Test:
             time.sleep(0.01)
             self.request("POST", update_url.format(key, str(i)), 'update')
             time.sleep(0.01)
-            self.request("GET", query_url.format(key), 'get', expect_val=str(i))
-        time.sleep(1)
+            self.request("GET", query_url.format(key), 'get', expect_dict=str(i))
+        time.sleep(2)
 
     def key_delete_test(self):
         time.sleep(1)
@@ -156,7 +156,7 @@ class Test:
             self.request("POST", insert_url.format(key, value), 'insert')
             time.sleep(0.01)
             self.request("POST", delete_url.format(key), 'delete')
-        time.sleep(1)
+        time.sleep(2)
 
 
 a = Test()
