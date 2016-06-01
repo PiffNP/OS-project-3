@@ -25,7 +25,14 @@ class Test:
     total_insert_num = 0
     suc_insert_num = 0
     result_flag = 'success'
-
+    def same_dict(self,dict1,dict2):
+        if len(dict1)!=len(dict2):return False
+        for key,value in dict1.items():
+            if key not in dict2:
+                return False
+            if dict2[key]!=value:
+                return False
+        return True
     def request(self, method_str, request_str, request_type=None, expect_dict=None):
         def func(request):
             if request_type == 'insert':
@@ -47,7 +54,7 @@ class Test:
                 print("request {}".format(request_str))
             res = conn.getresponse()
             res_json = json.loads(res.read().decode('utf-8'))
-            if expect_dict is not None and len(set(res_json) ^ set(expect_dict)) != 0:
+            if expect_dict is not None and not self.same_dict(expect_dict,res_json):
                 print("failed at {}!={}".format(expect_dict, res_json))
                 self.result_flag = 'fail'
             # maybe we should convert the value to a unicode string before output it
@@ -89,14 +96,14 @@ class Test:
         self.get_statistic.sort()
 
         print('Percentile latency: {0:.2f}ms/{1:.2f}ms, {2:.2f}ms/{3:.2f}ms, {4:.2f}ms/{5:.2f}ms, {6:.2f}ms/{7:.2f}ms'
-              .format(self.insert_statistic[round(len(self.insert_statistic) * 0.2)],
-                      self.get_statistic[round(len(self.get_statistic) * 0.2)],
-                      self.insert_statistic[round(len(self.insert_statistic) * 0.5)],
-                      self.get_statistic[round(len(self.get_statistic) * 0.5)],
-                      self.insert_statistic[round(len(self.insert_statistic) * 0.7)],
-                      self.get_statistic[round(len(self.get_statistic) * 0.7)],
-                      self.insert_statistic[round(len(self.insert_statistic) * 0.9)],
-                      self.get_statistic[round(len(self.get_statistic) * 0.9)]))
+              .format(self.insert_statistic[int(len(self.insert_statistic) * 0.2)],
+                      self.get_statistic[int(len(self.get_statistic) * 0.2)],
+                      self.insert_statistic[int(len(self.insert_statistic) * 0.5)],
+                      self.get_statistic[int(len(self.get_statistic) * 0.5)],
+                      self.insert_statistic[int(len(self.insert_statistic) * 0.7)],
+                      self.get_statistic[int(len(self.get_statistic) * 0.7)],
+                      self.insert_statistic[int(len(self.insert_statistic) * 0.9)],
+                      self.get_statistic[int(len(self.get_statistic) * 0.9)]))
 
     def multiple_key_test(self):
         keys = ["multiple_" + str(i) for i in range(100)]
@@ -135,7 +142,7 @@ class Test:
             time.sleep(0.01)
             self.request("POST", update_url.format(key, str(i)), 'update')
             time.sleep(0.01)
-            self.request("GET", query_url.format(key), 'get', expect_dict={'success': 'false', 'value': str(i)})
+            self.request("GET", query_url.format(key), 'get', expect_val=str(i))
         time.sleep(1)
 
     def key_delete_test(self):
