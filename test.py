@@ -141,12 +141,12 @@ class Test:
         time.sleep(1)
         key = 'delete_test'
         value="delete_val"
-        iteration_time=500
+        iteration_time=1
 
         for i in range(iteration_time):
             time.sleep(0.01)
             self.request("POST",insert_url.format(key,value),'insert')
-            time.sleep(0.01)
+            time.sleep(0.1)
             self.request("POST",delete_url.format(key),'delete')
         time.sleep(5)
 
