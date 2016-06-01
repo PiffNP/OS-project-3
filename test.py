@@ -127,8 +127,9 @@ class Test:
         self.request("POST",insert_url.format(key,value),'insert')
         for i in range(iteration_time):
             self.request("POST",update_url.format(key,str(i)),'update')
-            time.sleep(0.05)
+            time.sleep(0.025)
             self.request("GET",query_url.format(key),'get',expect_value=str(i))
+            time.sleep(0.025)
 
         time.sleep(2)
 
