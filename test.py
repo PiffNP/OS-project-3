@@ -6,8 +6,12 @@ import time
 import sys
 import os
 from read_write_lock import ReadWriteLock
+cfg = json.load(open('conf/settings.conf'))
+
+
+server_url = cfg['primary'] + ":" + cfg['port']
+
 keys=[str(i) for i in range(10)]
-server_url = "localhost:8888"
 insert_url = "/kv/insert/key={0}&value=El%20Ni%C3%B1o{1}"
 query_url = "/kv/get/?key={0}"
 update_url = "/kv/update/key={0}&value={1}"
@@ -87,8 +91,8 @@ class Test:
 
 
     def main(self):
-        os.system("bin//start_server -p")
-        os.system("bin//start_server -b")
+        #os.system("bin//start_server -p")
+        #os.system("bin//start_server -b")
         time.sleep(2)
         for key in keys:
             self.request("POST", insert_url.format(key,key), 'insert')
@@ -103,8 +107,8 @@ class Test:
             self.request("GET", query_url.format(key), 'get')
         time.sleep(10)
 
-        os.system("bin//stop_server -p")
-        os.system("bin//stop_server -b")
+        #os.system("bin//stop_server -p")
+        #os.system("bin//stop_server -b")
         #request("GET","/kvman/countkey")
         #request("GET","/kvman/dump")
 
