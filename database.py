@@ -14,12 +14,13 @@ class Database(object):
 
     def insert(self, key, value, func=foo, args=()):
         self.modify_lock.acquire_write()
-        if key in self.data:
+        if key in self.locks:
             self.modify_lock.release_write()
             return False
         self.locks[key] = ReadWriteLock()
         self.locks[key].acquire_write()
         self.modify_lock.release_write()
+
 
         res, success = func(*args)
 
@@ -37,17 +38,18 @@ class Database(object):
 
     def delete(self, key, func=foo, args=()):
         self.modify_lock.acquire_write()
-        if key not in self.data:
+        if key not in self.locks:
             self.modify_lock.release_write()
             return None
-        self.locks[key].aquire_write()
+        lock=self.locks[key]
         self.modify_lock.release_write()
+        lock.aquire_write()
 
         res, success = func(*args)
 
         self.modify_lock.acquire_write()
         if not success:
-            self.locks[key].release_write()
+            lock.release_write()
             self.modify_lock.release_write()
             return None
         else:
