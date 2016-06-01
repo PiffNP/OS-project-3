@@ -48,7 +48,7 @@ class Test:
                 print("request {}".format(request_str))
             res = conn.getresponse()
             res_json = json.loads(res.read().decode('utf-8'))
-            if expect_dict is not None and res_json==expect_dict:
+            if expect_dict is not None and len(set(res_json)^set(expect_dict))!=0:
                 print("failed at {}!={}".format(expect_dict,res_json))
                 self.result_flag='fail'
             # maybe we should convert the value to a unicode string before output it
