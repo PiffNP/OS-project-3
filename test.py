@@ -136,11 +136,25 @@ class Test:
 
         time.sleep(1)
 
+    def key_delete_test(self):
+        print("single key pressure test")
+        time.sleep(1)
+        keys = ["delete_"+str(i) for i in range(100)]
+        value="delete_val"
+        iteration_time=100
 
+        for i in range(iteration_time):
+            time.sleep(0.01)
+            for key in keys:
+                self.request("POST",insert_url.format(key,value),'insert')
+            time.sleep(0.01)
+            for key in keys:
+                self.request("POST",delete_url.format(key),'delete')
+        time.sleep(1)
 
 
 a = Test()
-
+a.key_delete_test()
 a.multiple_key_test()
 a.single_key_pressure_test()
 a.analysis()
