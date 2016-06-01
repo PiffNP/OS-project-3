@@ -104,19 +104,18 @@ class Test:
         # os.system("bin//start_server -b")
         time.sleep(1)
         for key in keys:
-            time.sleep(0.005)
             self.request("POST", insert_url.format(key, key), 'insert')
+        time.sleep(1)
         for key in keys:
-            time.sleep(0.005)
             self.request("GET", query_url.format(key), 'get')
+        time.sleep(1)
         for key in keys:
-            time.sleep(0.005)
             self.request("POST", update_url.format(key, key + key))
+        time.sleep(1)
         for key in keys:
-            time.sleep(0.005)
             self.request("GET", query_url.format(key), 'get')
+        time.sleep(1)
         for key in keys:
-            time.sleep(0.005)
             self.request("POST", delete_url.format(key), 'delete')
         time.sleep(1)
 
@@ -133,9 +132,9 @@ class Test:
         self.request("POST", insert_url.format(key, value), 'insert')
 
         for i in range(iteration_time):
-            time.sleep(0.005)
+            time.sleep(0.01)
             self.request("POST", update_url.format(key, str(i)), 'update')
-            time.sleep(0.005)
+            time.sleep(0.01)
             self.request("GET", query_url.format(key), 'get', expect_dict={'success': 'false', 'value': str(i)})
         time.sleep(1)
 
@@ -146,9 +145,9 @@ class Test:
         iteration_time = 200
 
         for i in range(iteration_time):
-            time.sleep(0.005)
+            time.sleep(0.01)
             self.request("POST", insert_url.format(key, value), 'insert')
-            time.sleep(0.005)
+            time.sleep(0.01)
             self.request("POST", delete_url.format(key), 'delete')
         time.sleep(1)
 
