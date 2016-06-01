@@ -148,7 +148,7 @@ class Test:
             self.request("POST",insert_url.format(key,value),'insert')
             time.sleep(0.01)
             self.request("POST",delete_url.format(key),'delete')
-        time.sleep(1)
+        time.sleep(5)
 
 
 a = Test()
