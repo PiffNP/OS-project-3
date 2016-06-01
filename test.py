@@ -124,7 +124,6 @@ class Test:
         key="test_key"
         value="init_val"
         iteration_time=1000
-        self.request("POST")
         self.request("POST",insert_url.format(key,value),'insert')
         for i in range(iteration_time):
             self.request("POST",update_url.format(key,str(i)),'update')
