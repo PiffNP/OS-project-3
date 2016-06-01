@@ -12,7 +12,7 @@ cfg = json.load(open('conf/settings.conf'))
 server_url = cfg['primary'] + ":" + cfg['port']
 
 keys = [str(i) for i in range(10)]
-insert_url = "/kv/insert/key={0}&value=El%20Ni%C3%B1o{1}"
+insert_url = "/kv/insert/key={0}&value={1}"
 query_url = "/kv/get/?key={0}"
 update_url = "/kv/update/key={0}&value={1}"
 delete_url = "/kv/delete/key={0}"
@@ -98,22 +98,22 @@ class Test:
                       self.insert_statistic[round(len(self.insert_statistic) * 0.9)],
                       self.get_statistic[round(len(self.get_statistic) * 0.9)]))
 
-    def main(self):
+    def mutiple_key_test(self):
         # os.system("bin//start_server -p")
         # os.system("bin//start_server -b")
-        time.sleep(2)
+        time.sleep(1)
         for key in keys:
             self.request("POST", insert_url.format(key, key), 'insert')
-        time.sleep(2)
+        time.sleep(1)
         for key in keys:
             self.request("GET", query_url.format(key), 'get')
-        time.sleep(2)
+        time.sleep(1)
         for key in keys:
             self.request("POST", update_url.format(key, key + key))
-        time.sleep(2)
+        time.sleep(1)
         for key in keys:
             self.request("GET", query_url.format(key), 'get')
-        time.sleep(10)
+        time.sleep(5)
 
         # os.system("bin//stop_server -p")
         # os.system("bin//stop_server -b")
@@ -121,21 +121,22 @@ class Test:
         # request("GET","/kvman/dump")
     def single_key_pressure_test(self):
         print("single key pressure test")
-        time.sleep(2)
+        time.sleep(1)
         key="test_key"
         value="init_val"
         iteration_time=1000
         self.request("POST",insert_url.format(key,value),'insert')
+
         for i in range(iteration_time):
+            time.sleep(0.01)
             self.request("POST",update_url.format(key,str(i)),'update')
             time.sleep(0.01)
             self.request("GET",query_url.format(key),'get',expect_value=str(i))
-            time.sleep(0.01)
 
-        time.sleep(2)
+        time.sleep(1)
 
 a = Test()
 
-a.main()
+a.multiple_key_test()
 a.single_key_pressure_test()
 a.analysis()
