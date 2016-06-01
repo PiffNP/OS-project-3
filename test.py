@@ -77,9 +77,9 @@ class Test:
 
     def analysis(self):
         if len(self.insert_statistic) == 0:
-            self.insert_staistic.append(0)
+            self.insert_statistic.append(0)
         if len(self.get_statistic) == 0:
-            self.get_staistic.append(0)
+            self.get_statistic.append(0)
         print('Result: {0}'.format(self.result_flag))
         print('Insertion: {0}/{1}'.format(self.suc_insert_num, self.total_insert_num))
         print(
