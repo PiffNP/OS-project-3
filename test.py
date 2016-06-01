@@ -120,6 +120,7 @@ class Test:
         # request("GET","/kvman/countkey")
         # request("GET","/kvman/dump")
     def single_key_pressure_test(self):
+        print("single key pressure test")
         time.sleep(2)
         key="test_key"
         value="init_val"
@@ -127,13 +128,14 @@ class Test:
         self.request("POST",insert_url.format(key,value),'insert')
         for i in range(iteration_time):
             self.request("POST",update_url.format(key,str(i)),'update')
-            time.sleep(0.025)
+            time.sleep(0.01)
             self.request("GET",query_url.format(key),'get',expect_value=str(i))
-            time.sleep(0.025)
+            time.sleep(0.01)
 
         time.sleep(2)
 
 a = Test()
-a.single_key_pressure_test()
+
 a.main()
+a.single_key_pressure_test()
 a.analysis()
