@@ -77,6 +77,10 @@ class Test:
         t.start()
 
     def analysis(self):
+        if len(self.insert_statistic) == 0:
+            self.insert_staistic.append(0)
+        if len(self.get_statistic) == 0:
+            self.get_staistic.append(0)
         print('Result: {0}'.format(self.result_flag))
         print('Insertion: {0}/{1}'.format(self.suc_insert_num, self.total_insert_num))
         print(
@@ -84,10 +88,7 @@ class Test:
                                                          sum(self.get_statistic) / float(len(self.get_statistic))))
         self.insert_statistic.sort()
         self.get_statistic.sort()
-        if len(self.insert_statistic) == 0:
-            self.insert_staistic.append(0)
-        if len(self.get_statistic) == 0:
-            self.get_staistic.append(0)
+
         print('Percentile latency: {0:.2f}ms/{1:.2f}ms, {2:.2f}ms/{3:.2f}ms, {4:.2f}ms/{5:.2f}ms, {6:.2f}ms/{7:.2f}ms'
               .format(self.insert_statistic[round(len(self.insert_statistic) * 0.2)],
                       self.get_statistic[round(len(self.get_statistic) * 0.2)],
@@ -114,6 +115,9 @@ class Test:
         time.sleep(1)
         for key in keys:
             self.request("GET", query_url.format(key), 'get')
+        time.sleep(1)
+        for key in keys:
+            self.request("POST",delete_url.format(key),'delete')
         time.sleep(5)
 
         # os.system("bin//stop_server -p")
@@ -153,6 +157,6 @@ class Test:
 
 a = Test()
 a.key_delete_test()
-#a.multiple_key_test()
-#a.single_key_pressure_test()
+a.multiple_key_test()
+a.single_key_pressure_test()
 a.analysis()
