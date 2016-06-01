@@ -11,7 +11,7 @@ cfg = json.load(open('conf/settings.conf'))
 
 server_url = cfg['primary'] + ":" + cfg['port']
 
-keys = [str(i) for i in range(10)]
+
 insert_url = "/kv/insert/key={0}&value={1}"
 query_url = "/kv/get/?key={0}"
 update_url = "/kv/update/key={0}&value={1}"
@@ -99,6 +99,7 @@ class Test:
                       self.get_statistic[round(len(self.get_statistic) * 0.9)]))
 
     def multiple_key_test(self):
+        keys = ["multiple_"+str(i) for i in range(100)]
         # os.system("bin//start_server -p")
         # os.system("bin//start_server -b")
         time.sleep(1)
@@ -122,7 +123,7 @@ class Test:
     def single_key_pressure_test(self):
         print("single key pressure test")
         time.sleep(1)
-        key="test_key"
+        key="single_pressure"
         value="init_val"
         iteration_time=1000
         self.request("POST",insert_url.format(key,value),'insert')
