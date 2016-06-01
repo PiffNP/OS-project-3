@@ -141,7 +141,7 @@ class Test:
         time.sleep(1)
         key = 'delete_test'
         value="delete_val"
-        iteration_time=1
+        iteration_time=5
 
         for i in range(iteration_time):
             time.sleep(0.01)
@@ -153,6 +153,6 @@ class Test:
 
 a = Test()
 a.key_delete_test()
-a.multiple_key_test()
-a.single_key_pressure_test()
+#a.multiple_key_test()
+#a.single_key_pressure_test()
 a.analysis()
