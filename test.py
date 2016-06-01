@@ -27,7 +27,7 @@ class Test:
     suc_insert_num = 0
     result_flag = 'success'
 
-    def request(self, method_str, request_str, request_type=None,expect_value=None):
+    def request(self, method_str, request_str, request_type=None,expect_dict=None):
         def func(request):
             if request_type == 'insert':
                 self.total_insert_num += 1
@@ -48,8 +48,8 @@ class Test:
                 print("request {}".format(request_str))
             res = conn.getresponse()
             res_json = json.loads(res.read().decode('utf-8'))
-            if expect_value is not None and res_json['value']!=expect_value:
-                print("failed at {}!={}".format(expect_value,res_json['value']))
+            if expect_dict is not None and dict.cmp(res_json,expect_dict):
+                print("failed at {}!={}".format(expect_dict,res_json))
                 self.result_flag='fail'
             # maybe we should convert the value to a unicode string before output it
             if len(sys.argv) == 1 and sys.argv[0] == '-d':
@@ -131,9 +131,12 @@ class Test:
             time.sleep(0.01)
             self.request("POST",update_url.format(key,str(i)),'update')
             time.sleep(0.01)
-            self.request("GET",query_url.format(key),'get',expect_value=str(i))
+            self.request("GET",query_url.format(key),'get',expect_dict={'success':'true','value':str(i)})
 
         time.sleep(1)
+
+
+
 
 a = Test()
 
