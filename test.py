@@ -6,16 +6,17 @@ import time
 import sys
 import os
 from read_write_lock import ReadWriteLock
-cfg = json.load(open('conf/settings.conf'))
 
+cfg = json.load(open('conf/settings.conf'))
 
 server_url = cfg['primary'] + ":" + cfg['port']
 
-keys=[str(i) for i in range(10)]
+keys = [str(i) for i in range(10)]
 insert_url = "/kv/insert/key={0}&value=El%20Ni%C3%B1o{1}"
 query_url = "/kv/get/?key={0}"
 update_url = "/kv/update/key={0}&value={1}"
 delete_url = "/kv/delete/key={0}"
+
 
 class Test:
     insert_statistic = []
@@ -26,13 +27,13 @@ class Test:
     suc_insert_num = 0
     result_flag = 'success'
 
-    def request(self, method_str, request_str, request_type = None):
+    def request(self, method_str, request_str, request_type=None):
         def func(request):
             if request_type == 'insert':
                 self.total_insert_num += 1
 
             start = time.clock()
-        
+
             flag = False
             fail_num = 0
             while not flag and fail_num < 2:
@@ -50,9 +51,9 @@ class Test:
             # maybe we should convert the value to a unicode string before output it
             if len(sys.argv) == 1 and sys.argv[0] == '-d':
                 print("{}:{}".format(request_str, res_json))
-        
+
             finish = time.clock()
-        
+
             if request_type != 'get' and request_type != 'insert':
                 return None
             if res_json['success'] != 'true':
@@ -75,8 +76,9 @@ class Test:
     def analysis(self):
         print('Result: {0}'.format(self.result_flag))
         print('Insertion: {0}/{1}'.format(self.suc_insert_num, self.total_insert_num))
-        print('Averge latency: {0:.2f}ms/{1:.2f}ms'.format(sum(self.insert_statistic)/float(len(self.insert_statistic)),
-                                            sum(self.get_statistic)/float(len(self.get_statistic))))
+        print(
+            'Averge latency: {0:.2f}ms/{1:.2f}ms'.format(sum(self.insert_statistic) / float(len(self.insert_statistic)),
+                                                         sum(self.get_statistic) / float(len(self.get_statistic))))
         self.insert_statistic.sort()
         self.get_statistic.sort()
         if len(self.insert_statistic) == 0:
@@ -84,38 +86,37 @@ class Test:
         if len(self.get_statistic) == 0:
             self.get_staistic.append(0)
         print('Percentile latency: {0:.2f}ms/{1:.2f}ms, {2:.2f}ms/{3:.2f}ms, {4:.2f}ms/{5:.2f}ms, {6:.2f}ms/{7:.2f}ms'
-                                                        .format(self.insert_statistic[round(len(self.insert_statistic) * 0.2)],
-                                                            self.get_statistic[round(len(self.get_statistic) * 0.2)],
-                                                            self.insert_statistic[round(len(self.insert_statistic) * 0.5)],
-                                                            self.get_statistic[round(len(self.get_statistic) * 0.5)],
-                                                            self.insert_statistic[round(len(self.insert_statistic) * 0.7)],
-                                                            self.get_statistic[round(len(self.get_statistic) * 0.7)],
-                                                            self.insert_statistic[round(len(self.insert_statistic) * 0.9)],
-                                                            self.get_statistic[round(len(self.get_statistic) * 0.9)]))
-
+              .format(self.insert_statistic[round(len(self.insert_statistic) * 0.2)],
+                      self.get_statistic[round(len(self.get_statistic) * 0.2)],
+                      self.insert_statistic[round(len(self.insert_statistic) * 0.5)],
+                      self.get_statistic[round(len(self.get_statistic) * 0.5)],
+                      self.insert_statistic[round(len(self.insert_statistic) * 0.7)],
+                      self.get_statistic[round(len(self.get_statistic) * 0.7)],
+                      self.insert_statistic[round(len(self.insert_statistic) * 0.9)],
+                      self.get_statistic[round(len(self.get_statistic) * 0.9)]))
 
     def main(self):
-        #os.system("bin//start_server -p")
-        #os.system("bin//start_server -b")
+        # os.system("bin//start_server -p")
+        # os.system("bin//start_server -b")
         time.sleep(2)
         for key in keys:
-            self.request("POST", insert_url.format(key,key), 'insert')
+            self.request("POST", insert_url.format(key, key), 'insert')
         time.sleep(2)
         for key in keys:
             self.request("GET", query_url.format(key), 'get')
         time.sleep(2)
         for key in keys:
-            self.request("POST", update_url.format(key,key+key))
+            self.request("POST", update_url.format(key, key + key))
         time.sleep(2)
         for key in keys:
             self.request("GET", query_url.format(key), 'get')
         time.sleep(10)
 
-        #os.system("bin//stop_server -p")
-        #os.system("bin//stop_server -b")
-        #request("GET","/kvman/countkey")
-        #request("GET","/kvman/dump")
-    
+        # os.system("bin//stop_server -p")
+        # os.system("bin//stop_server -b")
+        # request("GET","/kvman/countkey")
+        # request("GET","/kvman/dump")
+
 
 a = Test()
 a.main()

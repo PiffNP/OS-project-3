@@ -29,7 +29,7 @@ load_database()
 
 
 class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
-    METHODS = {'insert', 'delete', 'get', 'update', 'serialize','countkey','dump','shutdown'}
+    METHODS = {'insert', 'delete', 'get', 'update', 'serialize', 'countkey', 'dump', 'shutdown'}
 
     @staticmethod
     def parse_input(input_str):
