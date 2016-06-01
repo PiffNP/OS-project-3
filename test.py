@@ -106,7 +106,7 @@ class Test:
                 print("request {}".format(request_str))
             res = conn.getresponse()
             res_json = json.loads(res.read().decode('utf-8'))
-            if expect_dict is not None and len(set(res_json)^set(expect_dict))!=0:
+            if expect_dict is not None and not self.same_dict(expect_dict,res_json):
                 print("failed at {}!={}".format(expect_dict,res_json))
                 self.result_flag='fail'
             # maybe we should convert the value to a unicode string before output it
@@ -160,19 +160,18 @@ class Test:
         self.request("POST",delete_url.format(key),'delete',{'success':'false', 'value':None})
         time.sleep(5)
         
-        #self.request("GET",count_url.format(key),'count',{'result':'0'})
-        #self.bak_request("GET",count_url.format(key),'count',{'result':'0'})
-        #self.request("POST",insert_url.format(key,value),'insert',{'success':'true'})
-        #time.sleep(3)
-        #self.request("POST",insert_url.format(key,value),'insert',{'success':'true'})
-        #self.request("POST",insert_url.format(key + '2',value + '2'),'insert',{'success':'true'})
-        #self.request("POST",insert_url.format(key + '3',value + '3'),'insert',{'success':'true'})
-        #time.sleep(3)
-        #self.request("GET",count_url.format(key),'count',{'result':'3'})
-        #self.bak_request("GET",count_url.format(key),'count',{'result':'3'})
-        #self.request("GET",count_url.format(key),'count',{key:value, key+'2':value+'2', key+'3':value+'3'})
-        #self.bak_request("GET",count_url.format(key),'count',{key:value, key+'2':value+'2', key+'3':value+'3'})
-        #time.sleep(10)
+        self.request("GET",count_url,'count',{'result':'0'})
+        self.bak_request("GET",count_url,'count',{'result':'0'})
+        time.sleep(3)
+        self.request("POST",insert_url.format(key,value),'insert',{'success':'true'})
+        self.request("POST",insert_url.format(key + '2',value + '2'),'insert',{'success':'true'})
+        self.request("POST",insert_url.format(key + '3',value + '3'),'insert',{'success':'true'})
+        time.sleep(3)
+        self.request("GET",count_url,'count',{'result':'3'})
+        self.bak_request("GET",count_url,'count',{'result':'3'})
+        #self.request("GET",dump_url,'count',{key:value, key+'2':value+'2', key+'3':value+'3'})
+        #self.bak_request("GET",dump_url,'count',{key:value, key+'2':value+'2', key+'3':value+'3'})
+        time.sleep(10)
 
         #self.request("POST",insert_url.format(key + 'unicode', 'El Niño'),'insert',{'success':'true'})
         #time.sleep(0.1)
@@ -237,7 +236,7 @@ class Test:
 
 a = Test()
 a.basic_func_test()
-#a.key_delete_test()
-#a.multiple_key_test()
-#a.single_key_pressure_test()
+a.key_delete_test()
+a.multiple_key_test()
+a.single_key_pressure_test()
 a.analysis()
