@@ -139,17 +139,15 @@ class Test:
     def key_delete_test(self):
         print("key deletion test")
         time.sleep(1)
-        keys = ["delete_"+str(i) for i in range(100)]
+        key = 'delete_test'
         value="delete_val"
-        iteration_time=5
+        iteration_time=500
 
         for i in range(iteration_time):
             time.sleep(0.01)
-            for key in keys:
-                self.request("POST",insert_url.format(key,value),'insert')
+            self.request("POST",insert_url.format(key,value),'insert')
             time.sleep(0.01)
-            for key in keys:
-                self.request("POST",delete_url.format(key),'delete')
+            self.request("POST",delete_url.format(key),'delete')
         time.sleep(1)
 
 
