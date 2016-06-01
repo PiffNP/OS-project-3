@@ -79,6 +79,10 @@ class Test:
                                             sum(self.get_statistic)/float(len(self.get_statistic))))
         self.insert_statistic.sort()
         self.get_statistic.sort()
+	if(len(self.insert_statistic) == 0)
+		self.insert_staistic.append(0);
+	if(len(self.get_statistic) == 0)
+		self.get_staistic.append(0);
         print('Percentile latency: {0:.2f}ms/{1:.2f}ms, {2:.2f}ms/{3:.2f}ms, {4:.2f}ms/{5:.2f}ms, {6:.2f}ms/{7:.2f}ms'
                                                         .format(self.insert_statistic[round(len(self.insert_statistic) * 0.2)],
                                                             self.get_statistic[round(len(self.get_statistic) * 0.2)],
