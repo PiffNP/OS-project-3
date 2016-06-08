@@ -50,7 +50,12 @@ class Test:
             while not flag and fail_num < 2:
                 try:
                     conn = http.client.HTTPConnection(server_url)
-                    conn.request(method=method_str, url=request_str)
+                    if method_str == 'POST':
+                        request_data = request_str.split('/')
+                        request_data = [r for r in request_data if r != ""]
+                        conn.request(method=method_str, url = '/' + request_data[0] + '/' + request_data[1], body = request_data[2])
+                    else:
+                        conn.request(method=method_str, url=request_str)
                     flag = True
                 except ConnectionRefusedError and ConnectionResetError:
                     fail_num += 1
@@ -173,10 +178,6 @@ class Test:
         #self.bak_request("GET",dump_url,'count',{key:value, key+'2':value+'2', key+'3':value+'3'})
         time.sleep(10)
 
-        #self.request("POST",insert_url.format(key + 'unicode', 'El Niño'),'insert',{'success':'true'})
-        #time.sleep(0.1)
-        #self.request("GET",query_url.format(key + 'unicode'),'get',{'success':'true', 'value':'El Niño'})
-        #time.sleep(0.1)
 
 
 
