@@ -8,7 +8,6 @@ import http.client
 import sys
 import os
 from database import Database
-
 cfg = json.load(open('conf/settings.conf'))
 
 database = Database()
@@ -143,10 +142,20 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         self.handle_request()
 
     def do_POST(self):
-        self.handle_request()
-
-    def handle_request(self):
+        success=True
         try:
+            length=int(self.headers["Content-Length"])
+            input_str=self.rfile.read(length).decode("utf-8")
+            self.path+="/"+input_str
+        except Exception as e:
+            print(e)
+            success=False
+        print(self.path)
+        self.handle_request(success)
+
+    def handle_request(self,success=True):
+        try:
+            assert(success),"POST fail"
             request = self.path.split('/')
             request = [r for r in request if r != ""]
             if len(request) == 3:
