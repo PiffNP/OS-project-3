@@ -150,7 +150,6 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         except Exception as e:
             print(e)
             success=False
-        print(self.path)
         self.handle_request(success)
 
     def handle_request(self,success=True):

@@ -101,7 +101,7 @@ class Test:
             fail_num = 0
             while not flag and fail_num < 2:
                 try:
-                    conn = http.client.HTTPConnection(server_url)
+                    conn = http.client.HTTPConnection(bak_server_url)
                     conn.request(method=method_str, url=request_str)
                     flag = True
                 except ConnectionRefusedError and ConnectionResetError:
@@ -148,10 +148,6 @@ class Test:
         time.sleep(1)
         key = "basic_func" + "hello"
         value = "basic_func" + "world"
-        self.request("GET","kvman/shutdown")
-        self.bak_request("GET","kvman/shutdown")
-        print("waiting")
-        input()
         self.request("POST",insert_url.format(key,value),'insert',{'success':'true'})
         time.sleep(0.1)
         self.request("POST",insert_url.format(key,value),'insert',{'success':'false'})
@@ -215,7 +211,7 @@ class Test:
         time.sleep(1)
         key = "single_pressure"
         value = "init_val"
-        iteration_time = 1000
+        iteration_time = 400
         self.request("POST", insert_url.format(key, value), 'insert')
 
         for i in range(iteration_time):
