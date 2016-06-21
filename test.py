@@ -13,7 +13,7 @@ server_url = cfg['primary'] + ":" + cfg['port']
 bak_server_url = cfg['backup'] + ":" + cfg['port']
 
 insert_url = "/kv/insert/key={0}&value={1}"
-query_url = "/kv/get/?key={0}"
+query_url = "/kv/get?key={0}"
 update_url = "/kv/update/key={0}&value={1}"
 delete_url = "/kv/delete/key={0}"
 dump_url = "/kvman/dump"
