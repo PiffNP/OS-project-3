@@ -139,7 +139,7 @@ class ProjectHTTPRequestHandler(BaseHTTPRequestHandler):
         return outs
 
     def do_GET(self):
-	    if "?" in self.path:
+        if "?" in self.path:
             self.path=self.path.replace("?","/?",1)
         self.handle_request()
 
